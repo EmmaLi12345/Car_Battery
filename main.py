@@ -8,16 +8,21 @@ def initialize():
     global good_battery_health
     cur_time = 0
     good_battery_health = True
+
 def simulate_activity(activity, duration):
     pass
 def duration_fast_charge_possible():
     pass
+
 def get_cur_temp():
-    pass
+    return float(cur_temp)
+
 def get_cur_charge():
-    pass
+    return float(cur_charge)
+
 def get_cur_battery_health():
-    pass
+    return bool(good_battery_health)
+
 def charge_time_needed(minutes):
     pass
 if __name__ == '__main__':
