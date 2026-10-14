@@ -5,11 +5,11 @@ def initialize():
     global cur_temp # in degrees Celsius
     global cur_charge # in percentage points
     global cur_time # in minutes
-    global health_count
-    global good_battery_health
-    global time_1 
-    global time_2
-    global time_3 
+    global health_count #counts the number of time goes over 90% 
+    global good_battery_health #boolean for health battery 
+    global time_1 #stores time 1 
+    global time_2 #stores time 2 
+    global time_3 #stores time 3 
     time_1 = 0 
     time_2 = 0 
     time_3 = 0 
@@ -29,48 +29,49 @@ def simulate_activity(activity, duration):
     dead = False
     bad = False 
 
-    if activity == "charge":
+    if activity == "charge": 
         time_cur_charge = 0 
 
-        if cur_temp < 40 and cur_charge < 80 and good_battery_health:
-            time_cur_temp = (40 - cur_temp) / 0.5        #max amount of time we can charge until it reaches its limit
-            time_cur_charge = (80 - cur_charge) / 3
-            if time_cur_temp <= time_cur_charge:
+        if cur_temp < 40 and cur_charge < 80 and good_battery_health == True: #check if can run fast charge 
+            time_cur_temp = (40 - cur_temp) / 0.5 #max amt of time according to temp 
+            time_cur_charge = (80 - cur_charge) / 3 #max amt of time according to charge 
+            if time_cur_temp <= time_cur_charge: #take the smaller value 
                 fast_time = time_cur_temp
             else:
                 fast_time = time_cur_charge
-            if fast_time >= duration: 
+            if fast_time >= duration: #take the smaller value 
                 fast_time = duration
             else: 
-                slow_time = duration - fast_time
-                slow_charge = True
+                slow_time = duration - fast_time #figure out how long slow charge should be 
+                slow_charge = True #have to undergo slow charge 
             cur_charge += fast_time * 3 
-            cur_temp += fast_time * 0.5
+            cur_temp += fast_time * 0.5 
         else: 
-            slow_time = duration 
+            slow_time = duration #occur if fast charge cannot happen 
             slow_charge = True 
 
         
         if cur_charge + slow_time * 1 >= 90 and good_battery_health == True and slow_charge == True: 
+            #run if battery health will be affected 
             
-            time_90 = 90 - cur_charge 
+            time_90 = 90 - cur_charge #how long to 90% 
 
-            if time_90 < 0: 
+            if time_90 < 0: #ensure time_90 not below 0
                 time_90 = 0
 
-            health_count += 1 
+            health_count += 1 #charge beyond 90 
 
-            time_1 = time_2 
+            time_1 = time_2 #move value to previous one 
             time_2 = time_3 
-            time_3 = cur_time + fast_time + time_90 
+            time_3 = cur_time + fast_time + time_90 #take duration of new charge 
 
-            if health_count >= 3 and (time_3 - time_1) < 360: 
+            if health_count >= 3 and (time_3 - time_1) < 360: #when battery health becomes bad 
                 good_battery_health = False 
                 bad = True 
 
 
 
-        if slow_charge == True:
+        if slow_charge == True: #slow
             if good_battery_health == True: 
                 time_cur_charge = (100 - cur_charge) / 1
             elif bad == True: 
@@ -146,19 +147,19 @@ def simulate_activity(activity, duration):
         cur_temp -= 1 * dead_time 
 
     dead = False 
+    cur_time += duration 
 
 
 
 def duration_fast_charge_possible():
-    global cur_temp, cur_charge, cur_time, good_battery_health #do we need global? 
     if cur_temp < 40 and cur_charge < 80 and good_battery_health:
-        cur_time = (80 - cur_charge) / 3 
+        fast_time = (80 - cur_charge) / 3 
         temp_time = (40 - cur_temp) / 0.5 
-        if cur_time > temp_time: 
-            cur_time = temp_time  
-        return cur_time
+        if fast_time > temp_time: 
+            fast_time = temp_time  
+        return fast_time
     else: 
-        return 0 
+        return None 
     
 def get_cur_temp():
     return float(cur_temp)
@@ -208,6 +209,15 @@ def charge_time_needed(minutes):
 
             slow_time = charge_needed - (cur_charge + fast_time * 3)
             ###error for when it reaches 90 when bad battery health 
+
+            if charge_needed > 90: 
+                after_fast = 90 - cur_charge + fast_time * 3
+
+                if after_fast < 0: 
+                    after_fast = 0 
+
+                if health_count >= 2 and cur_time + fast_time + after_fast - time_2 < 360: 
+                    return None 
 
             return fast_time + slow_time 
 
