@@ -157,7 +157,7 @@ def duration_fast_charge_possible():
             fast_time = temp_time  
         return fast_time
     else: 
-        return None 
+        return 0
     
 def get_cur_temp():
     return float(cur_temp)
